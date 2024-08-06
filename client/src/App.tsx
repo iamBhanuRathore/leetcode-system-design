@@ -4,7 +4,7 @@ import { useWebSocketContext, userId } from "./context/WebSocketContext";
 import axios from "axios";
 
 function App() {
-  const { connect, isConnected, send, messages, disconnect } =
+  const { connect, isConnected, messages, setMessages, disconnect } =
     useWebSocketContext();
   const [values, setValues] = useState({
     userId,
@@ -13,25 +13,30 @@ function App() {
     language: "",
   });
   useEffect(() => {
-    if (isConnected && messages) {
-      alert(JSON.stringify(messages));
+    const submissionMessage = messages?.find(
+      (message) => message.key === "submission_response"
+    );
+    console.log(isConnected, submissionMessage, messages);
+    if (isConnected && submissionMessage?.messages) {
+      setMessages([]);
+      alert(JSON.stringify(submissionMessage.messages));
       disconnect();
     }
-    console.log(messages);
-    if (isConnected && !messages) {
-      (async()=>{
+    if (isConnected && !submissionMessage?.messages) {
+      (async () => {
         try {
-          const response = await axios.post('https://3000-idx-pub-sub-1722409699592.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev/submit', {
-            userId: '123',
-            problemId: '456',
-            code: 'console.log("Hello, World!");',
-            language: 'javascript',
-          });
+          const response = await axios.post(
+            "http://localhost:3000/submit",
+            values
+          );
           console.log(response.data);
-        } catch (error:any) {
-          console.error('Error:', error.response ? error.response.data : error.message);
+        } catch (error: any) {
+          console.error(
+            "Error:",
+            error.response ? error.response.data : error.message
+          );
         }
-      })()
+      })();
     }
   }, [messages, isConnected]);
   const handleConnectServer = async () => {
@@ -43,7 +48,7 @@ function App() {
         <p className="text-2xl font-semibold text-white ">User Id: {userId} </p>
         <input
           type="text"
-          className="p-3 rounded-md"
+          className="p-3 rounded-md bg-gray-300"
           placeholder="Enter Your Code"
           name="code"
           onChange={(e) => {
@@ -52,7 +57,7 @@ function App() {
         />
         <input
           type="text"
-          className="p-3 rounded-md"
+          className="p-3 rounded-md bg-gray-300"
           placeholder="Problem Id (Will get automatically)"
           name="problemId"
           onChange={(e) => {
@@ -61,7 +66,7 @@ function App() {
         />
         <input
           type="text"
-          className="p-3 rounded-md"
+          className="p-3 rounded-md bg-gray-300"
           placeholder="Language (Will get automatically)"
           name="language"
           onChange={(e) => {
@@ -70,8 +75,7 @@ function App() {
         />
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white duration-300 font-bold py-2 px-4 rounded-lg"
-          onClick={handleConnectServer}
-        >
+          onClick={handleConnectServer}>
           Submit
         </button>
       </div>

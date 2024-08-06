@@ -9,7 +9,10 @@ export function WebSocketServer(server: Server, options: ServerOptions = {}) {
     const params = parse(request.url!, true).query;
     const userId = params.userId as string;
     if (!userId) {
-      ws.send(JSON.stringify({ error: "UserId is not provided" }));
+      ws.send(
+        JSON.stringify({ key: "error", message: "UserId is not provided" }),
+        { binary: false }
+      );
       ws.close();
       return;
     }
@@ -49,11 +52,27 @@ export function handleWebSocketConnection(ws: WebSocket, userId: string) {
     connections.delete(userId);
   });
 
-  // ws.send(JSON.stringify({ message: "Connected to WebSocket Server !!!" }));
+  ws.send(
+    JSON.stringify({
+      key: "newConnection",
+      message: "Connected to WebSocket Server !!!",
+    }),
+    { binary: false }
+  );
 }
 
-export function sendToUser(ws: WebSocket, message: WebSocket.RawData | string) {
+export function sendToUser(
+  ws: WebSocket,
+  messageKey: string,
+  message: WebSocket.RawData | string
+) {
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(message, { binary: false });
+    ws.send(
+      JSON.stringify({
+        key: messageKey,
+        message: message,
+      }),
+      { binary: false }
+    );
   }
 }

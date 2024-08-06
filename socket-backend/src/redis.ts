@@ -23,10 +23,10 @@ export async function connectToRedis() {
       );
       const redisData = JSON.parse(message);
       console.log(redisData);
-      const userId = redisData.userId;
+      const userId = String(redisData.userId);
       const userWS = connections.get(userId);
       if (userWS) {
-        sendToUser(userWS, JSON.stringify(redisData));
+        sendToUser(userWS, "submission_response", redisData);
       } else {
         console.log("User Socket Not found");
       }

@@ -7,11 +7,21 @@ import React, {
 } from "react";
 import { connectSocket, disconnectSocket, sendMessage } from "./websocket";
 
+type MessageType = {
+  key: string;
+  messages: string[];
+};
+type ReceivedMessage = {
+  key: string;
+  message: string;
+};
+type Messages = MessageType[];
 // Define the WebSocket context interface
 interface WebSocketContextType {
   isConnected: boolean;
   // messages: MessageEvent<any>[];
-  messages: MessageEvent<any> | null;
+  messages: Messages | null;
+  setMessages: React.Dispatch<React.SetStateAction<Messages | null>>;
   connect: () => void;
   disconnect: () => void;
   send: (msg: string) => void;
@@ -39,8 +49,7 @@ export const WebSocketProvider: React.FC<{
 }> = ({ url, children }) => {
   url = url + "?userId=" + userId;
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [messages, setMessages] = useState<MessageEvent<any> | null>(null);
-  // const [messages, setMessages] = useState<MessageEvent<any>[]>([]);
+  const [messages, setMessages] = useState<Messages | null>(null);
 
   const handleOpen = useCallback(() => {
     setIsConnected(true);
@@ -57,9 +66,28 @@ export const WebSocketProvider: React.FC<{
   }, []);
 
   const handleMessage = useCallback((message: MessageEvent<any>) => {
-    console.log("WebSocket message received:", message.data);
-    setMessages(message.data);
-    // setMessages((prevMessages) => [...prevMessages, ...message.data]);
+    const response = JSON.parse(message.data) as ReceivedMessage;
+    console.log("WebSocket message received:", message);
+    // message.data
+
+    setMessages((p) => {
+      if (!p) {
+        return [
+          {
+            key: response.key,
+            messages: [response.message],
+          },
+        ];
+      }
+      let prev = [...p];
+      const index = prev?.findIndex((item) => item.key === response.key);
+      if (index != -1) {
+        prev[index].messages = [...prev[index].messages, response.message];
+      } else {
+        prev.push({ key: response.key, messages: [response.message] });
+      }
+      return prev;
+    });
   }, []);
 
   const connect = useCallback(() => {
@@ -83,8 +111,7 @@ export const WebSocketProvider: React.FC<{
   // Provide WebSocket state and functions to the context
   return (
     <WebSocketContext.Provider
-      value={{ isConnected, messages, connect, disconnect, send }}
-    >
+      value={{ isConnected, messages, setMessages, connect, disconnect, send }}>
       {children}
     </WebSocketContext.Provider>
   );

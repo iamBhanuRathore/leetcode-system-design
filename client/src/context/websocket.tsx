@@ -35,7 +35,7 @@ export const connectSocket = (
   };
 
   socket.onmessage = (message) => {
-    console.log("WebSocket message received:", message.data);
+    console.log("WebSocket message received:", JSON.parse(message.data));
     handleMessage(message);
   };
 };

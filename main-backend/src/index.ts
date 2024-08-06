@@ -6,14 +6,17 @@ const app = express();
 const port = parseInt(process.env.PORT || "3000");
 const redisClient = createClient({
   url: "redis://localhost:6379",
-}); 
+});
 
-app.use(cors({
-  origin: "https://5173-idx-pub-sub-1722409699592.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev", // Allow your specific frontend domain
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-  allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Allow your specific frontend domain
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+    allowedHeaders:
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+  })
+);
 app.use(bodyParser());
 
 app.get("/", (req, res) => {
